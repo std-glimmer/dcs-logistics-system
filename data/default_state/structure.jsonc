@@ -1,0 +1,278 @@
+{
+  "nodes": [
+    {
+      "name": "AB Camp Bastion",
+      "type": "airbase",
+      "state": {
+        "fuel": 4500, // 150 × 30
+        "ammo": 1500 // 50 × 30
+      },
+      "consumption": {
+        "fuel": 150,
+        "ammo": 50
+      },
+      "supplyRoutes": [
+        "air",
+        "ground"
+      ],
+      "children": [
+        {
+          "name": "FOB Edinburgh",
+          "type": "FOB",
+          "state": {
+            "fuel": 600, // 20 × 30
+            "ammo": 300 // 10 × 30
+          },
+          "consumption": {
+            "fuel": 20,
+            "ammo": 10
+          },
+          "supplyRoutes": [
+            "air"
+          ],
+          "children": []
+        },
+        {
+          "name": "FOB Dam",
+          "type": "FOB",
+          "state": {
+            "fuel": 1200, // 40 × 30
+            "ammo": 600 // 20 × 30
+          },
+          "consumption": {
+            "fuel": 40,
+            "ammo": 20
+          },
+          "supplyRoutes": [
+            "air",
+            "ground"
+          ],
+          "children": [
+            {
+              "name": "COP Scarlett",
+              "type": "COP",
+              "state": {
+                "fuel": 15, // 3 × 5 days
+                "ammo": 10 // 2 × 5 days
+              },
+              "consumption": {
+                "fuel": 3,
+                "ammo": 2
+              },
+              "supplyRoutes": [
+                "ground"
+              ]
+            },
+            {
+              "name": "COP Crash site",
+              "type": "COP",
+              "state": {
+                "fuel": 25, // 5 × 5 days
+                "ammo": 20 // 4 × 5 days
+              },
+              "consumption": {
+                "fuel": 5,
+                "ammo": 4
+              },
+              "supplyRoutes": [
+                "ground"
+              ]
+            },
+            {
+              "name": "COP Eva",
+              "type": "COP",
+              "state": {
+                "fuel": 16, // 4 × 4 days
+                "ammo": 12 // 3 × 4 days
+              },
+              "consumption": {
+                "fuel": 4,
+                "ammo": 3
+              },
+              "supplyRoutes": [
+                "ground"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "FARP Sydney",
+          "type": "COP",
+          "state": {
+            "fuel": 15, // 5 × 3 days
+            "ammo": 6 // 2 × 3 days
+          },
+          "consumption": {
+            "fuel": 5,
+            "ammo": 2
+          },
+          "supplyRoutes": [
+            "air"
+          ],
+          "children": []
+        }
+      ]
+    },
+    {
+      "name": "AB Kandahar",
+      "type": "airbase",
+      "state": {
+        "fuel": 6000, // 200 × 30
+        "ammo": 1800 // 60 × 30
+      },
+      "consumption": {
+        "fuel": 200,
+        "ammo": 60
+      },
+      "supplyRoutes": [
+        "air",
+        "ground"
+      ],
+      "children": [
+        {
+          "name": "FOB Martello",
+          "type": "FOB",
+          "state": {
+            "fuel": 900, // 30 × 30
+            "ammo": 450 // 15 × 30
+          },
+          "consumption": {
+            "fuel": 30,
+            "ammo": 15
+          },
+          "supplyRoutes": [
+            "air",
+            "ground"
+          ],
+          "children": [
+            {
+              "name": "COP Belly",
+              "type": "COP",
+              "state": {
+                "fuel": 4, // 4 × 1 day (critical)
+                "ammo": 3 // 3 × 1 day (critical)
+              },
+              "consumption": {
+                "fuel": 4,
+                "ammo": 3
+              },
+              "supplyRoutes": [
+                "ground"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "FOB Tango",
+          "type": "FOB",
+          "state": {
+            "fuel": 1050, // 35 × 30
+            "ammo": 540 // 18 × 30
+          },
+          "consumption": {
+            "fuel": 35,
+            "ammo": 18
+          },
+          "supplyRoutes": [
+            "air",
+            "ground"
+          ],
+          "children": []
+        },
+        {
+          "name": "FOB Camp Holland",
+          "type": "FOB",
+          "state": {
+            "fuel": 1500, // 50 × 30
+            "ammo": 750 // 25 × 30
+          },
+          "consumption": {
+            "fuel": 50,
+            "ammo": 25
+          },
+          "supplyRoutes": [
+            "air",
+            "ground"
+          ],
+          "children": [
+            {
+              "name": "COP Belly",
+              "type": "COP",
+              "state": {
+                "fuel": 3, // 3 × 1 day (critical)
+                "ammo": 2 // 2 × 1 day (critical)
+              },
+              "consumption": {
+                "fuel": 3,
+                "ammo": 2
+              },
+              "supplyRoutes": [
+                "ground"
+              ]
+            },
+            {
+              "name": "FB Wali",
+              "type": "FOB",
+              "state": {
+                "fuel": 120, // 4 × 30
+                "ammo": 90 // 3 × 30
+              },
+              "consumption": {
+                "fuel": 4,
+                "ammo": 3
+              },
+              "supplyRoutes": [
+                "ground"
+              ]
+            },
+            {
+              "name": "COP Maggy",
+              "type": "COP",
+              "state": {
+                "fuel": 8, // 4 × 2 days (low)
+                "ammo": 6 // 3 × 2 days (low)
+              },
+              "consumption": {
+                "fuel": 4,
+                "ammo": 3
+              },
+              "supplyRoutes": [
+                "air"
+              ]
+            },
+            {
+              "name": "COP Anna",
+              "type": "COP",
+              "state": {
+                "fuel": 6, // 3 × 2 day
+                "ammo": 4 // 2 × 2 day
+              },
+              "consumption": {
+                "fuel": 3,
+                "ammo": 2
+              },
+              "supplyRoutes": [
+                "air"
+              ]
+            },
+            {
+              "name": "COP Jane",
+              "type": "COP",
+              "state": {
+                "fuel": 6, // 3 × 2 days (low)
+                "ammo": 4 // 2 × 2 days (low)
+              },
+              "consumption": {
+                "fuel": 3,
+                "ammo": 2
+              },
+              "supplyRoutes": [
+                "air"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -7,7 +7,7 @@ import time
 class LogisticsController:
     def __init__(self, 
                  node_controller, 
-                 missions_controller, 
+                 mission_controller, 
                  transport_controller,
                  udp_service,
                  logger,
@@ -15,7 +15,7 @@ class LogisticsController:
                  cycle_interval: int = 86400):
         
         self.node_controller = node_controller
-        self.missions_controller = missions_controller
+        self.mission_controller = mission_controller
         self.transport_controller = transport_controller
         self.udp_service = udp_service
         self.logger = logger
@@ -61,9 +61,9 @@ class LogisticsController:
             # Process transport maintenance
             self.transport_controller.process_daily_maintenance()
             
-            # Plan and check missions
-            self.missions_controller.plan_missions()
-            self.missions_controller.check_scheduled_missions()
+            # Plan and check missions using new controller
+            self.mission_controller.plan_missions()
+            self.mission_controller.check_scheduled_missions()
             
             # Save current state
             self.save_state()
@@ -80,7 +80,7 @@ class LogisticsController:
         try:
             # Save current state
             self.node_controller.save_structure()
-            self.missions_controller.save_missions()
+            self.mission_controller.save_missions()
             self.transport_controller.save_transport()
             
             # Create backup
@@ -132,8 +132,8 @@ class LogisticsController:
         return {
             "is_running": self.is_running,
             "cycle_interval": self.cycle_interval,
-            "active_missions": len(self.missions_controller.active_missions),
-            "scheduled_missions": len(self.missions_controller.scheduled_missions),
+            "active_missions": len(self.mission_controller.active_missions),
+            "scheduled_missions": len(self.mission_controller.scheduled_missions),
             "nodes_count": len(self.node_controller.get_all_nodes()),
             "active_transports": self.transport_controller.get_active_transports()
         }

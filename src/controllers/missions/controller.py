@@ -1,10 +1,11 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Dict, List, Optional
+from ...utils.json_handler import JSONHandler
 from .planner import MissionPlanner
+from .scheduler import MissionScheduler
 from .validator import MissionValidator
 from .printer import MissionPrinter
-from ...models.node import Node
-from ...utils.json_handler import JSONHandler
+from ...models.mission import Mission
 
 class MissionController:
     def __init__(self, missions_file: str, node_controller, transport_controller, logger):
@@ -12,163 +13,182 @@ class MissionController:
         self.node_controller = node_controller
         self.transport_controller = transport_controller
         self.logger = logger
-        self.active_missions: Dict[str, dict] = {}
-        self.scheduled_missions: List[dict] = []
-        self.current_cycle = 0
-
+        
         # Initialize components
         self.planner = MissionPlanner(node_controller, transport_controller, logger)
+        self.scheduler = MissionScheduler(node_controller, transport_controller, logger)
         self.validator = MissionValidator(node_controller, transport_controller, logger)
         self.printer = MissionPrinter(logger)
-
+        
+        # State tracking
+        self.active_missions: Dict[str, dict] = {}
+        self.scheduled_missions: List[dict] = []
+        self.completed_missions: List[dict] = []
+        self.current_cycle = 0
+        
         self.load_missions()
 
     def load_missions(self) -> None:
-        """Load missions from JSON file"""
+        """Load missions from file"""
         try:
             json_handler = JSONHandler(self.missions_file)
             data = json_handler.read_json()
-            self.scheduled_missions = data.get("missions", [])
-        except FileNotFoundError:
-            self.logger.info("No existing missions file found, starting fresh")
+            
+            # Convert JSON to Mission objects
+            for mission_data in data.get("missions", []):
+                mission = Mission.from_json(mission_data)
+                
+                if mission.status == "completed":
+                    self.completed_missions.append(mission)
+                elif mission.status == "in_progress":
+                    self.active_missions[mission.route.to_node] = mission
+                else:
+                    self.scheduled_missions.append(mission)
+                    
+            self.logger.info(
+                f"Loaded {len(self.scheduled_missions)} scheduled, "
+                f"{len(self.active_missions)} active, "
+                f"{len(self.completed_missions)} completed missions"
+            )
+            
+        except Exception as e:
+            self.logger.error(f"Error loading missions: {str(e)}")
             self.scheduled_missions = []
-
-    def plan_missions(self) -> None:
-        """Plan missions for next 7 days"""
-        self.current_cycle += 1
-        current_date = datetime.now()
-        planning_horizon = current_date + timedelta(days=7)
-        
-        # Get resource forecast
-        resource_forecast = self._forecast_resources(current_date, planning_horizon)
-        
-        # Plan new missions
-        new_missions = self.planner.create_missions(
-            resource_forecast, 
-            current_date, 
-            self.current_cycle
-        )
-        
-        # Add valid missions to schedule
-        self._validate_and_add_missions(new_missions)
-        self.save_missions()
-
-    def _forecast_resources(self, start_date: datetime, end_date: datetime) -> Dict:
-        """Forecast resource levels"""
-        forecast = {}
-        for node in self.node_controller.get_all_nodes():
-            forecast[node.name] = {
-                "fuel": {"current": node.state["fuel"], "daily": []},
-                "ammo": {"current": node.state["ammo"], "daily": []}
-            }
-            
-        current_date = start_date
-        while current_date <= end_date:
-            date_str = current_date.strftime("%Y-%m-%d")
-            
-            for node in self.node_controller.get_all_nodes():
-                node_forecast = forecast[node.name]
-                for resource in ["fuel", "ammo"]:
-                    # Apply consumption
-                    node_forecast[resource]["current"] -= node.consumption[resource]
-                    
-                    # Add scheduled deliveries
-                    scheduled_amount = sum(
-                        r["quantity"] for m in self.scheduled_missions 
-                        for r in m["resources"]
-                        if m["route"]["to"] == node.name 
-                        and m["date"] == date_str 
-                        and r["type"] == resource
-                    )
-                    node_forecast[resource]["current"] += scheduled_amount
-                    
-                    # Record daily state
-                    node_forecast[resource]["daily"].append({
-                        "date": date_str,
-                        "level": node_forecast[resource]["current"]
-                    })
-            
-            current_date += timedelta(days=1)
-            
-        return forecast
-
-    def _validate_and_add_missions(self, new_missions: List[Dict]) -> None:
-        """Validate and add new missions to schedule"""
-        added_missions = []
-
-        for mission in new_missions:
-            # Add creation cycle
-            mission["creation_cycle"] = self.current_cycle
-            
-            # Validate mission including redundancy check with existing missions
-            if not self.validator.validate_mission(mission, self.scheduled_missions):
-                continue
-            
-            # Add to schedule
-            self.scheduled_missions.append(mission)
-            added_missions.append(mission)
-            self.logger.info(f"Scheduled mission: {mission['id']}")
-        
-        # Print new missions if any added
-        if added_missions:
-            self.printer.print_missions(added_missions, show_all=False)
+            self.active_missions = {}
+            self.completed_missions = []
 
     def save_missions(self) -> None:
-        """Save missions to JSON file"""
-        data = {"missions": self.scheduled_missions}
-        json_handler = JSONHandler(self.missions_file)
-        json_handler.write_json(data)
+        """Save current missions state"""
+        try:
+            data = {
+                "missions": [
+                    mission.to_json() for mission in (
+                        self.scheduled_missions + 
+                        list(self.active_missions.values()) + 
+                        self.completed_missions
+                    )
+                ]
+            }
+            
+            json_handler = JSONHandler(self.missions_file)
+            json_handler.write_json(data)
+            
+            self.logger.info(
+                f"Saved {len(self.scheduled_missions)} scheduled, "
+                f"{len(self.active_missions)} active, "
+                f"{len(self.completed_missions)} completed missions"
+            )
+            
+        except Exception as e:
+            self.logger.error(f"Error saving missions: {str(e)}")
+            raise
+
+    def plan_missions(self) -> None:
+        """Plan new missions based on resource forecasts"""
+        self.current_cycle += 1
+        current_date = datetime.now()
+        
+        try:
+            # Get resource forecasts
+            resource_forecast = self.planner.forecast_resources(current_date)
+            
+            # Create new missions with transport allocation
+            new_missions = self.planner.create_missions(
+                resource_forecast, 
+                current_date,
+                self.current_cycle
+            )
+            
+            # Validate and add missions to schedule
+            validated_missions = []
+            for mission in new_missions:
+                if self.validator.validate_mission(mission, self.scheduled_missions):
+                    validated_missions.append(mission)
+                    self.logger.info(f"Planned mission: {mission.id}")
+            
+            self.scheduled_missions.extend(validated_missions)
+            
+            # Print mission schedule
+            self.printer.print_missions(
+                self.scheduled_missions,
+                self.active_missions,
+                show_all=False,
+                current_cycle=self.current_cycle
+            )
+            
+            self.save_missions()
+            
+        except Exception as e:
+            self.logger.error(f"Error planning missions: {str(e)}")
 
     def check_scheduled_missions(self) -> None:
         """Process scheduled missions for current date"""
-        current_date = datetime.now().strftime("%Y-%m-%d")
+        try:
+            # Process missions through scheduler
+            processed = self.scheduler.process_missions(
+                self.scheduled_missions,
+                self.active_missions
+            )
+            
+            # Update mission states
+            self.scheduled_missions = processed["scheduled"]
+            self.active_missions = processed["active"]
+            self.completed_missions.extend(processed["completed"])
+            
+            # Maintain only last 100 completed missions
+            if len(self.completed_missions) > 100:
+                self.completed_missions = self.completed_missions[-100:]
+            
+            self.save_missions()
+            
+        except Exception as e:
+            self.logger.error(f"Error processing missions: {str(e)}")
+
+    def get_mission_status(self, mission_id: str) -> Optional[Dict]:
+        """Get current status of specific mission"""
+        # Check active missions
+        if mission_id in self.active_missions:
+            return self.active_missions[mission_id]
+            
+        # Check scheduled missions
+        for mission in self.scheduled_missions:
+            if mission["id"] == mission_id:
+                return mission
+                
+        # Check completed missions
+        for mission in self.completed_missions:
+            if mission["id"] == mission_id:
+                return mission
+                
+        return None
+
+    def get_missions_for_node(self, node_name: str) -> Dict[str, List[Dict]]:
+        """Get all missions related to specific node"""
+        node_missions = {
+            "scheduled": [],
+            "active": [],
+            "completed": []
+        }
         
-        # First check active missions completion
-        self._check_active_missions()
+        # Check scheduled missions
+        node_missions["scheduled"] = [
+            m for m in self.scheduled_missions
+            if (m.route.from_node == node_name or 
+                m["route"]["to"] == node_name)
+        ]
         
-        # Process scheduled missions for current date
-        for mission in list(self.scheduled_missions):
-            if mission["date"] == current_date and mission["status"] == "scheduled":
-                # Skip if destination has active mission
-                if mission["route"]["to"] in self.active_missions:
-                    continue
-                    
-                # Try to assign transport
-                transport = self.transport_controller.assign_transport(
-                    mission["id"],
-                    mission["route"]["from"],
-                    mission["transport_type"],
-                    {r["type"]: r["quantity"] for r in mission["resources"]}
-                )
-                
-                if transport:
-                    # Update mission status
-                    mission["status"] = "in_progress"
-                    mission["transport"] = transport
-                    self.active_missions[mission["route"]["to"]] = mission
-                    self.scheduled_missions.remove(mission)
-                    self.save_missions()
-                    
-    def _check_active_missions(self) -> None:
-        """Check and update active mission status"""
-        for dest, mission in list(self.active_missions.items()):
-            if self.transport_controller.is_mission_complete(mission["id"]):
-                # Update destination resources
-                dest_node = self.node_controller.get_node(dest)
-                for resource in mission["resources"]:
-                    dest_node.state[resource["type"]] += resource["quantity"]
-                
-                # Complete transport assignment
-                self.transport_controller.complete_mission(
-                    mission["id"], 
-                    mission["route"]["to"]
-                )
-                
-                # Update mission status
-                mission["status"] = "completed"
-                mission["completed_at"] = datetime.now().strftime("%Y-%m-%d %H:%M")
-                self.scheduled_missions.append(mission)
-                self.active_missions.pop(dest)
-                
-                self.logger.info(f"Mission {mission['id']} completed")
-                self.save_missions()
+        # Check active missions
+        node_missions["active"] = [
+            m for m in self.active_missions.values()
+            if (m.route.from_node == node_name or 
+                m["route"]["to"] == node_name)
+        ]
+        
+        # Check completed missions
+        node_missions["completed"] = [
+            m for m in self.completed_missions
+            if (m.route.from_node == node_name or 
+                m["route"]["to"] == node_name)
+        ]
+        
+        return node_missions

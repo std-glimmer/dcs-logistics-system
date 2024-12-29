@@ -9,7 +9,7 @@
             "routes": [
                 "ground"
             ],
-            "total_count": 24,
+            "total_count": 36,
             "units_on_bases": [
                 {
                     "node": "AB Kandahar",
@@ -20,7 +20,7 @@
                     "count": 12
                 },
                 {
-                    "node": "FOB Camp Holland",
+                    "node": "FOB Tarinkot",
                     "count": 12
                 }
             ],
@@ -35,129 +35,15 @@
             "routes": [
                 "air"
             ],
-            "total_count": 11,
+            "total_count": 12,
             "units_on_bases": [
                 {
-                    "node": "FOB Camp Holland",
-                    "count": 6,
-                    "units": [
-                        {
-                            "id": "D-661",
-                            "maintance": 100,
-                            "status": "ready",
-                            "stats": {
-                                "missions_completed": 0,
-                                "cargo_delivered": 0,
-                                "flight_hours": 0
-                            }
-                        },
-                        {
-                            "id": "D-662",
-                            "maintance": 100,
-                            "status": "ready",
-                            "stats": {
-                                "missions_completed": 0,
-                                "cargo_delivered": 0,
-                                "flight_hours": 0
-                            }
-                        },
-                        {
-                            "id": "D-663",
-                            "maintance": 100,
-                            "status": "ready",
-                            "stats": {
-                                "missions_completed": 0,
-                                "cargo_delivered": 0,
-                                "flight_hours": 0
-                            }
-                        },
-                        {
-                            "id": "D-664",
-                            "maintance": 100,
-                            "status": "ready",
-                            "stats": {
-                                "missions_completed": 0,
-                                "cargo_delivered": 0,
-                                "flight_hours": 0
-                            }
-                        },
-                        {
-                            "id": "D-665",
-                            "maintance": 100,
-                            "status": "ready",
-                            "stats": {
-                                "missions_completed": 0,
-                                "cargo_delivered": 0,
-                                "flight_hours": 0
-                            }
-                        },
-                        {
-                            "id": "D-666",
-                            "maintance": 100,
-                            "status": "ready",
-                            "stats": {
-                                "missions_completed": 0,
-                                "cargo_delivered": 0,
-                                "flight_hours": 0
-                            }
-                        }
-                    ]
+                    "node": "FOB Tarinkot",
+                    "count": 6
                 },
                 {
                     "node": "AB Camp Bastion",
-                    "count": 5,
-                    "units": [
-                        {
-                            "id": "D-667",
-                            "maintance": 100,
-                            "status": "ready",
-                            "stats": {
-                                "missions_completed": 0,
-                                "cargo_delivered": 0,
-                                "flight_hours": 0
-                            }
-                        },
-                        {
-                            "id": "D-668",
-                            "maintance": 100,
-                            "status": "ready",
-                            "stats": {
-                                "missions_completed": 0,
-                                "cargo_delivered": 0,
-                                "flight_hours": 0
-                            }
-                        },
-                        {
-                            "id": "D-669",
-                            "maintance": 100,
-                            "status": "ready",
-                            "stats": {
-                                "missions_completed": 0,
-                                "cargo_delivered": 0,
-                                "flight_hours": 0
-                            }
-                        },
-                        {
-                            "id": "D-670",
-                            "maintance": 100,
-                            "status": "ready",
-                            "stats": {
-                                "missions_completed": 0,
-                                "cargo_delivered": 0,
-                                "flight_hours": 0
-                            }
-                        },
-                        {
-                            "id": "D-671",
-                            "maintance": 100,
-                            "status": "ready",
-                            "stats": {
-                                "missions_completed": 0,
-                                "cargo_delivered": 0,
-                                "flight_hours": 0
-                            }
-                        }
-                    ]
+                    "count": 6
                 }
             ],
             "units_on_missions": []
@@ -183,16 +69,6 @@
                 "global"
             ],
             "is_player_available": false
-        }
-    ],
-    "maintenance_facilities": [
-        {
-            "node": "AB Kandahar",
-            "max_concurrent_repairs": 2
-        },
-        {
-            "node": "AB Camp Bastion",
-            "max_concurrent_repairs": 1
         }
     ]
 }

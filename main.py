@@ -3,7 +3,6 @@ from src.controllers.logistics_controller import LogisticsController
 from src.controllers.node_controller import NodeController
 
 from src.controllers.missions.controller import MissionController 
-from src.controllers.transport.maintenance import MaintenanceManager
 from src.controllers.transport.printer import TransportPrinter
 from src.controllers.transport.allocation import TransportAllocation
 from src.controllers.transport.controller import TransportController
@@ -78,22 +77,17 @@ def main():
         
         # Initialize controllers
         node_controller = NodeController(files["structure"], logger)
-        node_controller.print_graph()
+        # node_controller.print_graph()
         
         # Initialize transport subsystem
         transport_printer = TransportPrinter(logger)
         transport_allocation = TransportAllocation(logger)
-        maintenance_manager = MaintenanceManager(
-            facilities={},  # Will be populated from transport.json
-            logger=logger
-        )
         
         transport_controller = TransportController(
             files["transport"], 
             logger,
             printer=transport_printer,
-            allocation=transport_allocation,
-            maintenance=maintenance_manager
+            allocation=transport_allocation
         )
         
         # Initialize mission subsystem

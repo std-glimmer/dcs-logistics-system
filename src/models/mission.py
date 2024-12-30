@@ -57,7 +57,7 @@ class Mission:
         self.creation_cycle = creation_cycle
         self.is_relocation = is_relocation
         self.original_mission_id = original_mission_id
-        self.transport: Optional[TransportAssignment] = None
+        self.transport: TransportAssignment = None
         self.completed_at: Optional[str] = None
 
     @staticmethod
@@ -124,7 +124,7 @@ class Mission:
             date=json_data["date"],
             time=json_data["time"],
             route=Route(
-                from_node=json_dataroute.from_node,
+                from_node=json_data.route.from_node,
                 to_node=json_data.route.to_node
             ),
             resources=[

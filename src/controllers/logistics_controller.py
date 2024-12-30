@@ -61,16 +61,18 @@ class LogisticsController:
         try:
             # 1. Process resource consumption
             self.node_controller.apply_daily_consumption()
-            self.node_controller.print_graph()
+            # self.node_controller.print_graph()
             
             # 2. Process vehicle
-            self.transport_controller.print_status()
+            # self.transport_controller.print_status()
             
             # 3. Handle missions
             self._process_missions()
             
             # 4. Save state and create backup
             self.save_state()
+
+            self.print_debug_info()
             
             self.logger.info("Daily cycle completed")
 
@@ -127,10 +129,12 @@ class LogisticsController:
                 backup_path = os.path.join(self.backup_dir, backup_name)
                 
                 shutil.copy2(source, backup_path)
-                self.logger.info(f"Created backup: {backup_path}")
+                # self.logger.info(f"Created backup: {backup_path}")
                 
             except Exception as e:
                 self.logger.error(f"Error backing up {filename}: {str(e)}")
+        
+        self.logger.info(f"Created backups.")
 
     def _cleanup_old_backups(self, keep_count: int = 3) -> None:
         """Maintain only the specified number of recent backups for each file"""
@@ -158,7 +162,7 @@ class LogisticsController:
             for old_backup in backups[keep_count:]:
                 try:
                     os.remove(os.path.join(self.backup_dir, old_backup))
-                    self.logger.info(f"Removed old backup: {old_backup}")
+                    # self.logger.info(f"Removed old backup: {old_backup}")
                 except Exception as e:
                     self.logger.error(f"Error removing backup {old_backup}: {str(e)}")
 
@@ -174,3 +178,83 @@ class LogisticsController:
             "active_transports": self.transport_controller.get_active_transports(),
             "next_cycle": datetime.fromtimestamp(time.time() + self.cycle_interval).strftime("%Y-%m-%d %H:%M:%S")
         }
+    
+    def print_debug_info(self) -> None:
+        """Display system debug information in console"""
+        try:
+            os.system('cls' if os.name == 'nt' else 'clear')
+            print("\n=== DCS LOGISTICS SYSTEM DEBUG INFO ===")
+            
+            # System Status
+            print("\nSystem Status:")
+            print(f"Running: {self.is_running}")
+            print(f"Current Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+            print(f"Next Cycle: {datetime.fromtimestamp(time.time() + self.cycle_interval).strftime('%Y-%m-%d %H:%M:%S')}")
+            
+            # Mission Stats
+            print("\nMission Statistics:")
+            print(f"├── Active Missions: {len(self.mission_controller.active_missions)}")
+            print(f"├── Scheduled: {len(self.mission_controller.scheduled_missions)}")
+            print(f"└── Completed: {len(self.mission_controller.completed_missions)}")
+
+            # Critical Nodes
+            print("\nCritical Nodes (< 3 days supply):")
+            critical_found = False
+            for node in self.node_controller.get_all_nodes():
+                warnings = []
+                for resource in ['fuel', 'ammo']:
+                    if node.consumption[resource] > 0:
+                        days = node.state[resource] / node.consumption[resource]
+                        if days <= 3:
+                            warnings.append(f"{resource}: {days:.1f}d")
+                
+                if warnings:
+                    critical_found = True
+                    print(f"├── {node.name} ({node.node_type})")
+                    for warning in warnings:
+                        print(f"│   └── {warning}")
+            
+            if not critical_found:
+                print("└── None")
+
+            # Transport Status
+            print("\nTransport Assets:")
+            total_available = {"air": 0, "ground": 0}
+            total_on_mission = {"air": 0, "ground": 0}
+            
+            for vehicle in self.transport_controller.vehicles.values():
+                print(f"\n{vehicle.name} ({vehicle.transport_type}):")
+                
+                # Count available units
+                available = sum(base.count for base in vehicle.units_on_bases)
+                total_available[vehicle.transport_type] += available
+                
+                # Count units on missions
+                on_mission = sum(mission.count for mission in vehicle.units_on_missions)
+                total_on_mission[vehicle.transport_type] += on_mission
+                
+                # Print vehicle details
+                print(f"├── Available: {available}")
+                print(f"└── On Mission: {on_mission}")
+                
+                # Show base distribution
+                if vehicle.units_on_bases:
+                    print("    └── Distribution:")
+                    for base in vehicle.units_on_bases:
+                        if base.count > 0:
+                            print(f"        └── {base.node}: {base.count}")
+
+            # Active Missions Detail
+            if self.mission_controller.active_missions:
+                print("\nActive Mission Details:")
+                for dest, mission in self.mission_controller.active_missions.items():
+                    print(f"\n├── Mission {mission.id}")
+                    print(f"│   ├── Route: {mission.route.from_node} -> {mission.route.to_node}")
+                    print(f"│   ├── Transport: {mission.transport.vehicle_name} ({mission.transport.units} units)")
+                    for resource in mission.resources:
+                        print(f"│   └── Cargo: {resource.type}: {resource.quantity}")
+            
+            print("\n====================================")
+            
+        except Exception as e:
+            self.logger.error(f"Error printing debug info: {str(e)}")

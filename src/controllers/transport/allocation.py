@@ -1,12 +1,13 @@
 from typing import Dict, List, Optional
 from ...models.transport import Transport
+from ...models.mission import TransportAssignment
 
 class TransportAllocation:
     def __init__(self, logger):
         self.logger = logger
 
     def assign_transport(self, vehicles: Dict[str, Transport], mission_id: str,
-                        node: str, transport_type: str, cargo: Dict) -> Optional[Dict]:
+                        node: str, transport_type: str, cargo: Dict) -> Optional[TransportAssignment]:
         """
         Assign transport units to mission
         
@@ -53,11 +54,13 @@ class TransportAllocation:
             self.logger.info(
                 f"Assigned {units_needed} {vehicle.name} units to mission {mission_id}"
             )
-            return {
-                "vehicle": vehicle.name,
-                "units": units_needed,
-                "capacity": vehicle.capacity * units_needed
-            }
+            
+            return TransportAssignment(
+                vehicle_type=vehicle.transport_type,
+                vehicle_name=vehicle.name,
+                units=units_needed,
+                capacity=vehicle.capacity
+            )
 
         except Exception as e:
             self.logger.error(f"Error in transport assignment: {str(e)}")
@@ -87,7 +90,7 @@ class TransportAllocation:
                 continue
 
             efficiency = total_cargo / (units_needed * vehicle.capacity)
-            if efficiency > best_efficiency:
+            if efficiency >= best_efficiency:
                 best_vehicle = vehicle
                 best_efficiency = efficiency
 

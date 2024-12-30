@@ -100,7 +100,7 @@ class MissionPlanner:
 
             # Создание миссии
             mission = Mission(
-                mission_id=f"M{cycle}_{node.name}_{resource_type}",
+                mission_id=f"M{cycle}_{source.name}_{node.name}_{resource_type}",
                 date=priority["delivery_date"],
                 time=self._get_delivery_time(node),
                 route=Route(

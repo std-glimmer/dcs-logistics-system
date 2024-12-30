@@ -3,6 +3,8 @@ from ...models.transport import Transport
 from ...utils.json_handler import JSONHandler
 from .allocation import TransportAllocation
 from .printer import TransportPrinter
+from ...models.mission import TransportAssignment
+import traceback
 
 class TransportController:
     def __init__(self, transport_file: str, logger, 
@@ -49,7 +51,7 @@ class TransportController:
             return None
 
     def assign_transport(self, mission_id: str, from_node: str,
-                        transport_type: str, cargo: Dict) -> Optional[Dict]:
+                        transport_type: str, cargo: Dict) -> Optional[TransportAssignment]:
         """Assign transport to mission"""
         try:
             result = self.allocation.assign_transport(
@@ -63,12 +65,20 @@ class TransportController:
             if result:
                 self.save_transport()
                 self.logger.info(
-                    f"Assigned {result['vehicle']} ({result['units']} units) to mission {mission_id}"
+                    f"Assigned {result.vehicle_name} ({result.units} units) to mission {mission_id}"
                 )
             return result
             
         except Exception as e:
-            self.logger.error(f"Error assigning transport: {str(e)}")
+            error_info = traceback.extract_tb(e.__traceback__)[-1]
+            filename = error_info.filename
+            line_no = error_info.lineno
+            line = error_info.line
+            
+            self.logger.error(
+                f"Error assigning transport: {str(e)}\n"
+                f"File: {filename}, Line {line_no}: {line}"
+            )
             return None
 
     def complete_mission(self, mission_id: str, to_node: str) -> None:

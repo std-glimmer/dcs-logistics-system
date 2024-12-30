@@ -7,6 +7,8 @@ from .validator import MissionValidator
 from .printer import MissionPrinter
 from ...models.mission import Mission
 
+import traceback
+
 class MissionController:
     def __init__(self, missions_file: str, node_controller, transport_controller, logger):
         self.missions_file = missions_file
@@ -52,7 +54,15 @@ class MissionController:
             )
             
         except Exception as e:
-            self.logger.error(f"Error loading missions: {str(e)}")
+            error_info = traceback.extract_tb(e.__traceback__)[-1]
+            filename = error_info.filename
+            line_no = error_info.lineno
+            line = error_info.line
+            
+            self.logger.error(
+                f"Error loading missions: {str(e)}\n"
+                f"File: {filename}, Line {line_no}: {line}"
+            )
             self.scheduled_missions = []
             self.active_missions = {}
             self.completed_missions = []
@@ -80,7 +90,15 @@ class MissionController:
             )
             
         except Exception as e:
-            self.logger.error(f"Error saving missions: {str(e)}")
+            error_info = traceback.extract_tb(e.__traceback__)[-1]
+            filename = error_info.filename
+            line_no = error_info.lineno
+            line = error_info.line
+            
+            self.logger.error(
+                f"Error saving missions: {str(e)}\n"
+                f"File: {filename}, Line {line_no}: {line}"
+            )
             raise
 
     def plan_missions(self) -> None:
@@ -119,7 +137,16 @@ class MissionController:
             self.save_missions()
             
         except Exception as e:
-            self.logger.error(f"Error planning missions: {str(e)}")
+            error_info = traceback.extract_tb(e.__traceback__)[-1]
+            filename = error_info.filename
+            line_no = error_info.lineno
+            line = error_info.line
+            
+            self.logger.error(
+                f"Error planning missions: {str(e)}\n"
+                f"File: {filename}, Line {line_no}: {line}"
+            )
+            raise
 
     def check_scheduled_missions(self) -> None:
         """Process scheduled missions for current date"""
@@ -142,7 +169,16 @@ class MissionController:
             self.save_missions()
             
         except Exception as e:
-            self.logger.error(f"Error processing missions: {str(e)}")
+            error_info = traceback.extract_tb(e.__traceback__)[-1]
+            filename = error_info.filename
+            line_no = error_info.lineno
+            line = error_info.line
+            
+            self.logger.error(
+                f"Error processing missions: {str(e)}\n"
+                f"File: {filename}, Line {line_no}: {line}"
+            )
+            raise
 
     def get_mission_status(self, mission_id: str) -> Optional[Dict]:
         """Get current status of specific mission"""
